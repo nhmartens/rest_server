@@ -35,11 +35,19 @@ pub async fn get_projects(db: web::Data<Database>) -> HttpResponse {
 
 #[post("/projects")]
 pub async fn create_project(db: web::Data<Database>, new_project: web::Json<Project>) -> HttpResponse {
-    let project = db.create_project(new_project.into_inner());
-    match project {
-        Ok(project) => HttpResponse::Ok().json(project),
-        Err(err) => HttpResponse::InternalServerError().body(err.to_string()),
+    let new_project = new_project.into_inner();
+    let clients = db.get_clients();
+    let id_exists = clients.iter().any(|obj| obj.id == new_project.client_id);
+    if id_exists {
+        let project = db.create_project(new_project);
+        return match project {
+            Ok(project) => HttpResponse::Ok().json(project),
+            Err(err) => HttpResponse::InternalServerError().body(err.to_string()),
     }
+    } else {
+        HttpResponse::NotFound().body("Client ID does not exist in the Database")
+    }
+    
 }
 
 #[delete("/projects/{id}")]
