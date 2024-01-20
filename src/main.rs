@@ -28,8 +28,8 @@ async fn not_found() -> Result<HttpResponse> {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    let todo_db = repository::database::Database::new();
-    let app_data = web::Data::new(todo_db);
+    let client_db = repository::database::Database::new();
+    let app_data = web::Data::new(client_db);
 
     HttpServer::new(move ||
         App::new()

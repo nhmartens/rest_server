@@ -5,7 +5,9 @@ use diesel::r2d2::{self, ConnectionManager};
 use dotenv::dotenv;
 
 use crate::models::client::Client;
-use crate::repository::schema::clients::dsl::*;
+use crate::models::project::Project;
+use crate::repository::schema::clients;//::dsl::*;
+use crate::repository::schema::projects;
 
 pub type DBPool = r2d2::Pool<ConnectionManager<SqliteConnection>>;
 
@@ -24,6 +26,13 @@ impl Database {
         Database { pool }
     }
 
+    // Clients
+    pub fn get_clients(&self) -> Vec<Client> {
+        clients::table
+            .load::<Client>(&mut self.pool.get().unwrap())
+            .expect("Error loading all clients")
+    }
+
     pub fn create_client(&self, client: Client) -> Result<Client, Error> {
         let client = Client{
             id: uuid::Uuid::new_v4().to_string(),
@@ -31,23 +40,47 @@ impl Database {
             updated_at: Some(Utc::now().naive_utc().to_string()),
             ..client
         };
-        diesel::insert_into(clients)
+        diesel::insert_into(clients::table)
             .values(&client)
             .execute(&mut self.pool.get().unwrap())
             .expect("Error creating a new client");
         Ok(client)
     }
 
-    pub fn get_clients(&self) -> Vec<Client> {
-        clients
-            .load::<Client>(&mut self.pool.get().unwrap())
-            .expect("Error loading all clients")
-    }
-
     pub fn delete_client_by_id(&self, client_id: &str) -> Option<usize> {
-        let count = diesel::delete(clients.find(client_id))
+        let count = diesel::delete(clients::table.find(client_id))
             .execute(&mut self.pool.get().unwrap())
             .expect("Error deleting client by id");
         Some(count)
     }
+
+    // Projects
+    pub fn get_projects(&self) -> Vec<Project> {
+        projects::table
+            .load::<Project>(&mut self.pool.get().unwrap())
+            .expect("Error loading all projects")
+    }
+
+    pub fn create_project(&self, project: Project) -> Result<Project, Error> {
+        let project = Project{
+            id: uuid::Uuid::new_v4().to_string(),
+            created_at: Some(Utc::now().naive_utc().to_string()),
+            updated_at: Some(Utc::now().naive_utc().to_string()),
+            ..project
+        };
+        diesel::insert_into(projects::table)
+            .values(&project)
+            .execute(&mut self.pool.get().unwrap())
+            .expect("Error creating a new project");
+        Ok(project)
+    }
+
+    pub fn delete_project_by_id(&self, project_id: &str) -> Option<usize> {
+        let count = diesel::delete(projects::table.find(project_id))
+            .execute(&mut self.pool.get().unwrap())
+            .expect("Error deleting project by id");
+        Some(count)
+    }
+
+
 }
