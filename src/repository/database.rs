@@ -33,6 +33,14 @@ impl Database {
             .expect("Error loading all clients")
     }
 
+    pub fn get_client_by_id(&self, client_id: &str) -> Option<Client> {
+        let client = clients::table
+            .find(client_id)
+            .get_result::<Client>(&mut self.pool.get().unwrap())
+            .expect("Error loading client by id");
+        Some(client)
+    }
+
     pub fn create_client(&self, client: Client) -> Result<Client, Error> {
         let client = Client{
             id: uuid::Uuid::new_v4().to_string(),

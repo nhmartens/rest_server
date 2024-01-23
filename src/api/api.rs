@@ -8,6 +8,16 @@ pub async fn get_clients(db: web::Data<Database>) -> HttpResponse {
     HttpResponse::Ok().json(clients)
 }
 
+#[get("clients/{id}")]
+pub async fn get_client_by_id(db: web::Data<Database>, id: web::Path<String>) -> HttpResponse {
+    let client = db.get_client_by_id(&id);
+
+    match client {
+        Some(client) => HttpResponse::Ok().json(client),
+        None => HttpResponse::NotFound().body("Client not found"),
+    }
+}
+
 #[post("/clients")]
 pub async fn create_client(db: web::Data<Database>, new_client: web::Json<Client>) -> HttpResponse {
     let client = db.create_client(new_client.into_inner());
@@ -66,6 +76,7 @@ pub fn config(cfg: &mut web::ServiceConfig) {
             // Clients
             .service(create_client)
             .service(get_clients)
+            .service(get_client_by_id)
             .service(delete_client_by_id)
             // Projects
             .service(get_projects)
